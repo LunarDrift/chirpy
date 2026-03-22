@@ -3,20 +3,31 @@ package main
 import (
 	"log"
 	"net/http"
+	"sync/atomic"
 )
 
-func healthzHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(200)
-	w.Write([]byte("OK"))
+type apiConfig struct {
+	fileserverHits atomic.Int32 // allows us to safely increment and read int value across multiple goroutines (HTTP requests)
+}
+
+func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cfg.fileserverHits.Add(1)
+		next.ServeHTTP(w, r)
+	})
 }
 
 func main() {
-	mux := http.NewServeMux()
-	mux.Handle("/app/", http.StripPrefix("/app", http.FileServer(http.Dir("."))))
+	// create instance of struct
+	apiCfg := &apiConfig{}
 
-	// register new Handler
-	mux.HandleFunc("/healthz", healthzHandler)
+	mux := http.NewServeMux()
+	mux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(".")))))
+
+	// register new Handlers
+	mux.HandleFunc("GET /healthz", healthzHandler)
+	mux.HandleFunc("GET /metrics", apiCfg.metricsHandler)
+	mux.HandleFunc("POST /reset", apiCfg.resetHandler)
 
 	httpServer := http.Server{
 		Addr:    ":8080",
