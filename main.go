@@ -1,13 +1,20 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
+	"os"
 	"sync/atomic"
+
+	"github.com/LunarDrift/chirpy/internal/database"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 type apiConfig struct {
 	fileserverHits atomic.Int32 // allows us to safely increment and read int value across multiple goroutines (HTTP requests)
+	db             *database.Queries
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
@@ -18,8 +25,25 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 }
 
 func main() {
+	// load .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("could not find environment file: ", err)
+	}
+
+	// get db url
+	dbURL := os.Getenv("DB_URL")
+
+	// open connection to database
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Println("could not connect to database: ", err)
+	}
+
+	dbQueries := database.New(db)
+
 	// create instance of struct
-	apiCfg := &apiConfig{}
+	apiCfg := &apiConfig{db: dbQueries}
 
 	mux := http.NewServeMux()
 	mux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(".")))))
@@ -35,7 +59,7 @@ func main() {
 		Handler: mux,
 	}
 
-	err := httpServer.ListenAndServe()
+	err = httpServer.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 	}
