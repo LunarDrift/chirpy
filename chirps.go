@@ -3,15 +3,11 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 )
 
 type chirpRequest struct {
 	Body string `json:"body"`
-}
-
-type chirpResponse struct {
-	Valid bool   `json:"valid"`
-	Error string `json:"error,omitempty"`
 }
 
 func (cfg *apiConfig) validateChirpHandler(w http.ResponseWriter, r *http.Request) {
@@ -27,5 +23,23 @@ func (cfg *apiConfig) validateChirpHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, chirpResponse{Valid: true})
+	cleanedBody := filterProfanity(req.Body)
+
+	respondWithJSON(w, http.StatusOK, map[string]string{"cleaned_body": cleanedBody})
+}
+
+func filterProfanity(body string) string {
+	profanity := map[string]bool{
+		"kerfuffle": true,
+		"sharbert":  true,
+		"fornax":    true,
+	}
+
+	words := strings.Split(body, " ")
+	for i, word := range words {
+		if profanity[strings.ToLower(word)] {
+			words[i] = "****"
+		}
+	}
+	return strings.Join(words, " ")
 }
