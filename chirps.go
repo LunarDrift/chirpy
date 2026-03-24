@@ -29,15 +29,15 @@ func (cfg *apiConfig) validateChirpHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func filterProfanity(body string) string {
-	profanity := map[string]bool{
-		"kerfuffle": true,
-		"sharbert":  true,
-		"fornax":    true,
+	profanity := map[string]struct{}{
+		"kerfuffle": {},
+		"sharbert":  {},
+		"fornax":    {},
 	}
 
 	words := strings.Split(body, " ")
 	for i, word := range words {
-		if profanity[strings.ToLower(word)] {
+		if _, ok := profanity[strings.ToLower(word)]; ok {
 			words[i] = "****"
 		}
 	}
