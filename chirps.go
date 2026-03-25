@@ -4,28 +4,22 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
+
+	"github.com/LunarDrift/chirpy/internal/database"
+	"github.com/google/uuid"
 )
 
 type chirpRequest struct {
 	Body string `json:"body"`
 }
 
-func (cfg *apiConfig) validateChirpHandler(w http.ResponseWriter, r *http.Request) {
-	var req chirpRequest
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Something went wrong")
-		return
-	}
-
-	if len(req.Body) > 140 {
-		respondWithError(w, http.StatusBadRequest, "Chirp is too long")
-		return
-	}
-
-	cleanedBody := filterProfanity(req.Body)
-
-	respondWithJSON(w, http.StatusOK, map[string]string{"cleaned_body": cleanedBody})
+type Chirp struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Body      string    `json:"body"`
+	UserID    uuid.UUID `json:"user_id"`
 }
 
 func filterProfanity(body string) string {
@@ -42,4 +36,43 @@ func filterProfanity(body string) string {
 		}
 	}
 	return strings.Join(words, " ")
+}
+
+func (cfg *apiConfig) createChirpHandler(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
+		Body   string    `json:"body"`
+		UserID uuid.UUID `json:"user_id"`
+	}
+
+	var params parameters
+	err := json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters")
+		return
+	}
+
+	// profanity filter and length checking
+	if len(params.Body) > 140 {
+		respondWithError(w, http.StatusBadRequest, "Chirp is too long")
+		return
+	}
+	cleanedBody := filterProfanity(params.Body)
+
+	// save to database
+	chirp, err := cfg.db.CreateChirp(r.Context(), database.CreateChirpParams{
+		Body:   cleanedBody,
+		UserID: params.UserID,
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't create chirp")
+		return
+	}
+
+	respondWithJSON(w, http.StatusCreated, Chirp{
+		ID:        chirp.ID,
+		CreatedAt: chirp.CreatedAt,
+		UpdatedAt: chirp.UpdatedAt,
+		Body:      chirp.Body,
+		UserID:    chirp.UserID,
+	})
 }
