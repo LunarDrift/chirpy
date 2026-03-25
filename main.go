@@ -43,7 +43,10 @@ func main() {
 	dbQueries := database.New(db)
 
 	// create instance of struct
-	apiCfg := &apiConfig{db: dbQueries}
+	apiCfg := &apiConfig{
+		fileserverHits: atomic.Int32{},
+		db:             dbQueries,
+	}
 
 	mux := http.NewServeMux()
 	mux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(".")))))
