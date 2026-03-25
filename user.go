@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/LunarDrift/chirpy/internal/auth"
+	"github.com/LunarDrift/chirpy/internal/database"
 	"github.com/google/uuid"
 )
 
@@ -16,9 +18,10 @@ type User struct {
 }
 
 func (cfg *apiConfig) createUserHandler(w http.ResponseWriter, r *http.Request) {
-	// decode the email from request body
+	// decode the email/password from request body
 	type parameters struct {
-		Email string `json:"email"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 	var params parameters
 	err := json.NewDecoder(r.Body).Decode(&params)
@@ -27,8 +30,18 @@ func (cfg *apiConfig) createUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// hash password after decoding
+	hashedPassword, err := auth.HashPassword(params.Password)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't hash password")
+		return
+	}
+
 	// call the sqlc query
-	dbUser, err := cfg.db.CreateUser(r.Context(), params.Email)
+	dbUser, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
+		Email:          params.Email,
+		HashedPassword: hashedPassword,
+	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create user")
 		return
