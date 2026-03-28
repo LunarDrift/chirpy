@@ -7,7 +7,7 @@ import (
 
 func MakeRefreshToken() string {
 	// generate 32 bytes of random data
-	var b []byte
+	b := make([]byte, 32)
 	_, _ = rand.Read(b)
 
 	// convert to a hex string
