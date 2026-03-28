@@ -72,6 +72,7 @@ func main() {
 	mux.HandleFunc("POST /api/login", apiCfg.handleUserLogin)
 	mux.HandleFunc("POST /api/refresh", apiCfg.handleRefreshAccessToken)
 	mux.HandleFunc("POST /api/revoke", apiCfg.handleRevokeRefreshToken)
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.handleUpgradeUserStatus)
 
 	httpServer := http.Server{
 		Addr:    ":8080",
