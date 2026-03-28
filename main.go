@@ -18,6 +18,7 @@ type apiConfig struct {
 	db             *database.Queries
 	platform       string
 	secret         string
+	polkaKey       string
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
@@ -38,6 +39,7 @@ func main() {
 	dbURL := os.Getenv("DB_URL")
 	dbPlatform := os.Getenv("PLATFORM")
 	dbSecret := os.Getenv("SECRET")
+	polkaKey := os.Getenv("POLKA_KEY")
 
 	// open connection to database
 	db, err := sql.Open("postgres", dbURL)
@@ -53,6 +55,7 @@ func main() {
 		db:             dbQueries,
 		platform:       dbPlatform,
 		secret:         dbSecret,
+		polkaKey:       polkaKey,
 	}
 
 	mux := http.NewServeMux()
