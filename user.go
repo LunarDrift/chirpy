@@ -61,9 +61,8 @@ func (cfg *apiConfig) createUserHandler(w http.ResponseWriter, r *http.Request) 
 
 func (cfg *apiConfig) userLoginHandler(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Email            string `json:"email"`
-		Password         string `json:"password"`
-		ExpiresInSeconds int    `json:"expires_in_seconds"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 	var params parameters
 	err := json.NewDecoder(r.Body).Decode(&params)
@@ -87,31 +86,30 @@ func (cfg *apiConfig) userLoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// build token
-	expiresIn := time.Duration(params.ExpiresInSeconds) * time.Second
-	if expiresIn == 0 || expiresIn > time.Hour {
-		expiresIn = time.Hour
-	}
-
-	token, err := auth.MakeJWT(dbUser.ID, cfg.secret, expiresIn)
+	accessToken, err := auth.MakeJWT(dbUser.ID, cfg.secret, time.Hour)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't make token")
 		return
 	}
 
+	refreshToken := auth.MakeRefreshToken()
+
 	type loginResponse struct {
-		ID        uuid.UUID `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		Email     string    `json:"email"`
-		Token     string    `json:"token"`
+		ID           uuid.UUID `json:"id"`
+		CreatedAt    time.Time `json:"created_at"`
+		UpdatedAt    time.Time `json:"updated_at"`
+		Email        string    `json:"email"`
+		Token        string    `json:"token"`
+		RefreshToken string    `json:"refresh_token"`
 	}
 
 	loginResp := loginResponse{
-		ID:        dbUser.ID,
-		CreatedAt: dbUser.CreatedAt,
-		UpdatedAt: dbUser.UpdatedAt,
-		Email:     dbUser.Email,
-		Token:     token,
+		ID:           dbUser.ID,
+		CreatedAt:    dbUser.CreatedAt,
+		UpdatedAt:    dbUser.UpdatedAt,
+		Email:        dbUser.Email,
+		Token:        accessToken,
+		RefreshToken: refreshToken,
 	}
 
 	respondWithJSON(w, http.StatusOK, loginResp)
