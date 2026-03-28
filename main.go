@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -63,6 +64,7 @@ func main() {
 
 	mux.HandleFunc("GET /api/healthz", handleHealthZ)
 	mux.HandleFunc("GET /api/chirps", apiCfg.handleGetAllChirps)
+	mux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.handleDeleteChirpByID)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.handleGetChirpByID)
 	mux.HandleFunc("POST /api/chirps", apiCfg.handleCreateChirp)
 	mux.HandleFunc("POST /api/users", apiCfg.handleCreateUser)
@@ -76,6 +78,7 @@ func main() {
 		Handler: mux,
 	}
 
+	fmt.Println("Listening on port: ", httpServer.Addr)
 	err = httpServer.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
