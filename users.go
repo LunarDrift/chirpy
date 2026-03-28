@@ -67,7 +67,7 @@ func (cfg *apiConfig) handleUserLogin(w http.ResponseWriter, r *http.Request) {
 	var params parameters
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Couldn't decode paramters")
+		respondWithError(w, http.StatusBadRequest, "Couldn't decode parameters")
 		return
 	}
 
@@ -123,4 +123,57 @@ func (cfg *apiConfig) handleUserLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, loginResp)
+}
+
+func (cfg *apiConfig) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
+	// Get token and validate first
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Missing or invalid token")
+		return
+	}
+	userID, err := auth.ValidateJWT(token, cfg.secret)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Invalid token")
+		return
+	}
+
+	// Get data from response body after confirming valid token
+	type parameters struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	var params parameters
+	err = json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Couldn't decode parameters")
+		return
+	}
+
+	// Hash password after decoding
+	hashedPassword, err := auth.HashPassword(params.Password)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't hash password")
+		return
+	}
+
+	// Update database
+	dbUser, err := cfg.db.UpdateUser(r.Context(), database.UpdateUserParams{
+		Email:          params.Email,
+		HashedPassword: hashedPassword,
+		ID:             userID,
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't update database")
+		return
+	}
+
+	// Map database.User to main.User
+	user := User{
+		ID:        dbUser.ID,
+		CreatedAt: dbUser.CreatedAt,
+		UpdatedAt: dbUser.UpdatedAt,
+		Email:     dbUser.Email,
+	}
+	respondWithJSON(w, http.StatusOK, user)
 }

@@ -33,7 +33,7 @@ func main() {
 		log.Println("could not find environment file: ", err)
 	}
 
-	// get db url and platform
+	// get db info from environment
 	dbURL := os.Getenv("DB_URL")
 	dbPlatform := os.Getenv("PLATFORM")
 	dbSecret := os.Getenv("SECRET")
@@ -66,6 +66,7 @@ func main() {
 	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.handleGetChirpByID)
 	mux.HandleFunc("POST /api/chirps", apiCfg.handleCreateChirp)
 	mux.HandleFunc("POST /api/users", apiCfg.handleCreateUser)
+	mux.HandleFunc("PUT /api/users", apiCfg.handleUpdateUser)
 	mux.HandleFunc("POST /api/login", apiCfg.handleUserLogin)
 	mux.HandleFunc("POST /api/refresh", apiCfg.handleRefreshAccessToken)
 	mux.HandleFunc("POST /api/revoke", apiCfg.handleRevokeRefreshToken)
