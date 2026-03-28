@@ -26,8 +26,15 @@ func (cfg *apiConfig) handleUpgradeUserStatus(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	err = cfg.db.UpgradeUserToChirpyRed(r.Context(), params.Data.UserID)
+	result, err := cfg.db.UpgradeUserToChirpyRed(r.Context(), params.Data.UserID)
 	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't update user")
+		return
+	}
+
+	// make sure we actually updated a user
+	rows, err := result.RowsAffected()
+	if err != nil || rows == 0 {
 		respondWithError(w, http.StatusNotFound, "Couldn't find user")
 		return
 	}
