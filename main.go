@@ -16,6 +16,7 @@ type apiConfig struct {
 	fileserverHits atomic.Int32 // allows us to safely increment and read int value across multiple goroutines (HTTP requests)
 	db             *database.Queries
 	platform       string
+	secret         string
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
@@ -35,6 +36,7 @@ func main() {
 	// get db url and platform
 	dbURL := os.Getenv("DB_URL")
 	dbPlatform := os.Getenv("PLATFORM")
+	dbSecret := os.Getenv("SECRET")
 
 	// open connection to database
 	db, err := sql.Open("postgres", dbURL)
@@ -49,6 +51,7 @@ func main() {
 		fileserverHits: atomic.Int32{},
 		db:             dbQueries,
 		platform:       dbPlatform,
+		secret:         dbSecret,
 	}
 
 	mux := http.NewServeMux()
