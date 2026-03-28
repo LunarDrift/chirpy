@@ -144,7 +144,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 
 const upgradeUserToChirpyRed = `-- name: UpgradeUserToChirpyRed :exec
 UPDATE users
-SET is_chirpy_red = true
+SET is_chirpy_red = true, updated_at = NOW()
 WHERE id = $1
 `
 
