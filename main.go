@@ -58,17 +58,17 @@ func main() {
 	mux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(".")))))
 
 	// register new Handlers
-	mux.HandleFunc("GET /admin/metrics", apiCfg.metricsHandler)
-	mux.HandleFunc("POST /admin/reset", apiCfg.resetHandler)
+	mux.HandleFunc("GET /admin/metrics", apiCfg.handleShowMetrics)
+	mux.HandleFunc("POST /admin/reset", apiCfg.handleResetMetrics)
 
-	mux.HandleFunc("GET /api/healthz", healthzHandler)
-	mux.HandleFunc("GET /api/chirps", apiCfg.getAllChirpsHandler)
-	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.getChirpByIDHandler)
-	mux.HandleFunc("POST /api/users", apiCfg.createUserHandler)
-	mux.HandleFunc("POST /api/chirps", apiCfg.createChirpHandler)
-	mux.HandleFunc("POST /api/login", apiCfg.userLoginHandler)
-	mux.HandleFunc("POST /api/refresh", apiCfg.refreshTokenHandler)
-	mux.HandleFunc("POST /api/revoke", apiCfg.revokeRefreshTokenHandler)
+	mux.HandleFunc("GET /api/healthz", handleHealthZ)
+	mux.HandleFunc("GET /api/chirps", apiCfg.handleGetAllChirps)
+	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.handleGetChirpByID)
+	mux.HandleFunc("POST /api/chirps", apiCfg.handleCreateChirp)
+	mux.HandleFunc("POST /api/users", apiCfg.handleCreateUser)
+	mux.HandleFunc("POST /api/login", apiCfg.handleUserLogin)
+	mux.HandleFunc("POST /api/refresh", apiCfg.handleRefreshAccessToken)
+	mux.HandleFunc("POST /api/revoke", apiCfg.handleRevokeRefreshToken)
 
 	httpServer := http.Server{
 		Addr:    ":8080",

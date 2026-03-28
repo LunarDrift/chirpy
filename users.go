@@ -17,7 +17,7 @@ type User struct {
 	Email     string    `json:"email"`
 }
 
-func (cfg *apiConfig) createUserHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	// decode the email/password from request body
 	type parameters struct {
 		Email    string `json:"email"`
@@ -59,7 +59,7 @@ func (cfg *apiConfig) createUserHandler(w http.ResponseWriter, r *http.Request) 
 	respondWithJSON(w, http.StatusCreated, user)
 }
 
-func (cfg *apiConfig) userLoginHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleUserLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`

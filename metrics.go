@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (cfg *apiConfig) metricsHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleShowMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	_, _ = fmt.Fprintf(w, `<html>
@@ -16,7 +16,7 @@ func (cfg *apiConfig) metricsHandler(w http.ResponseWriter, r *http.Request) {
 </html>`, cfg.fileserverHits.Load())
 }
 
-func (cfg *apiConfig) resetHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleResetMetrics(w http.ResponseWriter, r *http.Request) {
 	if cfg.platform != "dev" {
 		respondWithError(w, http.StatusForbidden, "Insufficient permissions")
 		return

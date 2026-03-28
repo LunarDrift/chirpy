@@ -7,7 +7,7 @@ import (
 	"github.com/LunarDrift/chirpy/internal/auth"
 )
 
-func (cfg *apiConfig) refreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleRefreshAccessToken(w http.ResponseWriter, r *http.Request) {
 	token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Couldn't get token")
@@ -33,7 +33,7 @@ func (cfg *apiConfig) refreshTokenHandler(w http.ResponseWriter, r *http.Request
 	respondWithJSON(w, http.StatusOK, response{Token: accessToken})
 }
 
-func (cfg *apiConfig) revokeRefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleRevokeRefreshToken(w http.ResponseWriter, r *http.Request) {
 	token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Couldn't get token")

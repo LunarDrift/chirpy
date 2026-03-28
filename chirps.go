@@ -35,7 +35,7 @@ func filterProfanity(body string) string {
 	return strings.Join(words, " ")
 }
 
-func (cfg *apiConfig) createChirpHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleCreateChirp(w http.ResponseWriter, r *http.Request) {
 	token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Missing or invalid token")
@@ -86,7 +86,7 @@ func (cfg *apiConfig) createChirpHandler(w http.ResponseWriter, r *http.Request)
 	})
 }
 
-func (cfg *apiConfig) getAllChirpsHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleGetAllChirps(w http.ResponseWriter, r *http.Request) {
 	dbChirps, err := cfg.db.GetAllChirps(r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't get chirps")
@@ -108,7 +108,7 @@ func (cfg *apiConfig) getAllChirpsHandler(w http.ResponseWriter, r *http.Request
 	respondWithJSON(w, http.StatusOK, chirps)
 }
 
-func (cfg *apiConfig) getChirpByIDHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handleGetChirpByID(w http.ResponseWriter, r *http.Request) {
 	chirpIDStr := r.PathValue("chirpID")
 
 	id, err := uuid.Parse(chirpIDStr)
