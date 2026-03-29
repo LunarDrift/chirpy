@@ -38,7 +38,7 @@ func main() {
 	// get db info from environment
 	dbURL := os.Getenv("DB_URL")
 	dbPlatform := os.Getenv("PLATFORM")
-	dbSecret := os.Getenv("SECRET")
+	dbSecret := os.Getenv("JWT_SECRET")
 	polkaKey := os.Getenv("POLKA_KEY")
 
 	// open connection to database
