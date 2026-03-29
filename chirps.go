@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -90,8 +91,10 @@ func (cfg *apiConfig) handleGetAllChirps(w http.ResponseWriter, r *http.Request)
 	var dbChirps []database.Chirp
 	var err error
 
-	// optional author id argument
+	// optional arguments
 	authorID := r.URL.Query().Get("author_id")
+	sortOrder := r.URL.Query().Get("sort")
+
 	// if no author id arg, get all chirps like usual
 	if authorID == "" {
 		dbChirps, err = cfg.db.GetAllChirps(r.Context())
@@ -117,6 +120,12 @@ func (cfg *apiConfig) handleGetAllChirps(w http.ResponseWriter, r *http.Request)
 			Body:      c.Body,
 			UserID:    c.UserID,
 		}
+	}
+
+	if sortOrder == "desc" {
+		sort.Slice(chirps, func(i, j int) bool {
+			return chirps[i].CreatedAt.After(chirps[j].CreatedAt)
+		})
 	}
 	respondWithJSON(w, http.StatusOK, chirps)
 }
